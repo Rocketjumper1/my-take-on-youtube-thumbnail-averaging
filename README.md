@@ -1,3 +1,3 @@
 # my-take-on-youtube-thumbnail-averaging
 this is a variation of @emnersonn (on youtube)'s idea. basically it averages out the thumbnails of a youtube channels' video's then shows you the averaged image. my version has a gui that can help you with the proccess. but make sure you dont run it in a bad area because it will create two folders one for images and the other for the final averaged image. 1. (script location)/(creator name)/(name of video).(extension). 2. (script location)/(creator name)- average/image.png.
-hope that helps. also hoep you see this @emnersonn
+hope that helps. this is much smaller than the original at only 166 lines. however, it only has one averaging mode D:
