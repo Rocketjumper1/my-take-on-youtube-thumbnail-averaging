@@ -10,7 +10,7 @@ for name, member in vars(img_averager).items():
         func = member.__func__
         average_func_array.append(func)
 sshot_folder = ""
-list = []
+
 img_size = (500, 500)
 MIN_LENGTH =  60
 up_b = None
@@ -71,10 +71,6 @@ def average_img(folder, out_folder):
         clear()
         if not os.path.isdir(out_folder):
             os.mkdir(out_folder)
-        else:
-            lsi = os.listdir(out_folder)
-            for i in lsi:
-                os.remove(out_folder + f"/{i}")
         images = []
         for i in ls:
             path = f"{folder}/{i}"
