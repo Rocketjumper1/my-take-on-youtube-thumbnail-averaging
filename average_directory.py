@@ -13,7 +13,10 @@ for name, member in vars(img_averager).items():
         average_func_array.append(func)
 
 def start():
-    average_img(f"{located_in}/{entry.get()}", f"{located_in}/{entry.get()}: averaged")
+    global average_folder
+    average_folder = entry.get()
+    ls = os.listdir(f"{located_in}/{average_folder}")
+    image_viewer(ls, f"{located_in}/{average_folder}")
 def clear():
     global R
     for i in R.winfo_children():
@@ -23,7 +26,42 @@ images = []
 dir_start = f"{located_in}/{average_folder}"
 dir_list = os.listdir(dir_start)
 count = 0
-
+counter = 0
+def image_viewer(lis= [], dr = ""):
+    clear()
+    global R
+    global down_b
+    global up_b
+    global blur
+    global image
+    global counter
+    R.title("image viewin time")
+    print(f"directory passed is {dr}, list is {lis}")
+    Dr = f"{dr}/{lis[counter]}"
+    print(dr)
+    blur = tk.Button(R, text= "want to see all thumbnails bflurred?", command= lambda fold =dr, o_fold=f"{dr}: averaged": average_img(fold, o_fold) )
+    blur.pack(anchor="nw")
+    img = Image.open(Dr).resize(img_size)
+    tk_img = ImageTk.PhotoImage(img)
+    image= tk.Label(R, image = tk_img)
+    image.image = tk_img
+    saved_to = tk.Label(R, text=f"all images saved to {dr}")
+    image.pack()
+    def up():
+        global counter
+        if counter + 1 < len(lis):
+            counter += 1
+        image_viewer(lis, dr)
+    def down():
+        global counter
+        if counter - 1 >= 0:
+            counter -= 1
+        image_viewer(lis, dr)
+    up_b = tk.Button(R, text= "next image -->", command=up)
+    down_b = tk.Button(R, text= "<-- go back", command=down)
+    down_b.pack()
+    up_b.pack()
+    saved_to.pack()
 def average_img(folder, out_folder):
         global R
         
