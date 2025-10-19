@@ -2,12 +2,17 @@ import yt_dlp
 import os
 import tkinter as tk
 import numpy as np
+from image_averager import img_averager
 from PIL import Image, ImageTk
-
+average_func_array = []
+for name, member in vars(img_averager).items():
+    if isinstance(member, staticmethod):
+        func = member.__func__
+        average_func_array.append(func)
 sshot_folder = ""
 list = []
 img_size = (500, 500)
-MIN_LENGTH = 300
+MIN_LENGTH =  60
 up_b = None
 down_b = None
 image= None
@@ -26,7 +31,7 @@ yt_dlp_p = {
 
 }
 
-
+count = 0
 counter = 0
 def start_event():
 	global sshot_folder
@@ -54,33 +59,72 @@ def clear():
     global R
     for element in R.winfo_children():
             element.destroy()
-def average_img(folder, out_folder ):
+def average_img(folder, out_folder):
         global R
-        ls = os.listdir(folder)
-        clear()
         
-        np_images = []
+        
+        
+        print(folder)
+        print(out_folder)
+        ls = os.listdir(folder)
+        print(ls, out_folder)
+        clear()
         if not os.path.isdir(out_folder):
             os.mkdir(out_folder)
+        else:
+            lsi = os.listdir(out_folder)
+            for i in lsi:
+                os.remove(out_folder + f"/{i}")
+        images = []
         for i in ls:
-            path = os.path.join(folder, i)
-            img = Image.open(path).convert('RGB').resize(img_size)
-            np_images.append(np.array(img, dtype= np.float32))
-        saved_to = tk.Label(R, text=f"image saved to {folder}/image.png")
-        average_array = np.mean(np_images, axis=0)
-        avg_img = Image.fromarray(np.uint8(average_array))
-        avg_img.save(f"{out_folder}/image.png")
+            path = f"{folder}/{i}"
+            print(i)
+            images.append(Image.open(path))
+   
+        
+        
+ 
+        
+        avg_img, current_method =  average_func_array[count](images, img_size)
+        
+        avg_img.save(f"{out_folder}/image {current_method}.png")
+        saved_to = tk.Label(R, text=f"image saved to {folder}/image {current_method}.png")
         img_tk = ImageTk.PhotoImage(avg_img)
         image = tk.Label(R, text="average_img", image=img_tk)
-        go_back = tk.Button(R, text = "go back", command = lambda l=ls, d=folder: helper_del_func(l, d))
-        def helper_del_func(l, d):
-            image.destroy()
-            image_viewer(l, d)
-            go_back.destroy()
+        
+        
+        def helper_up():
+            global R
+            global count
+            clear()
+            if count + 1 < len(average_func_array):
+                count += 1
+            average_img(folder, out_folder)
+        def helper_down():
+            global R
+            global count
+            clear()
+            if count - 1 >= 0 :
+                count -= 1
+            average_img(folder, out_folder)
+        def helper_del_func():
+            clear()
+            image_viewer(ls, folder)
+        go_back = tk.Button(R, text = "go back", command = helper_del_func)
+        button_up = tk.Button(R, text= "Next method -->", command = helper_up)
+        button_down = tk.Button(R, text = "<-- Previous_method", command = helper_down)
+        ave_type = tk.Label(R, text=current_method)
+        up = tk.Button(R, text = "go to next")
         go_back.pack(anchor="nw")
         image.image = img_tk
         image.pack()
+        button_up.pack()
+        button_down.pack()
+        ave_type.pack()
         saved_to.pack()
+def print_mult(sentance, num, ends="\n"):
+    for i in range(num):
+        print(sentance, end=ends)
 def return_start():
     global entry
     clear()
@@ -92,10 +136,7 @@ def return_start():
     entry.insert(0, "youtube.com/@")
     entry.pack()
     start = tk.Button(R, text="confirm_channel", command = start_event)
-
-    
     start.pack()
-    
 def image_viewer(lis= [], dr = ""):
 	view.destroy()
 	global R
@@ -106,7 +147,7 @@ def image_viewer(lis= [], dr = ""):
 	global counter
 	R.title("image viewin time")
 	go_back = tk.Button(R, text="go back to url entering", command= return_start)
-	print(f"directory passed is {dir}, list is {lis}")
+	print(f"directory passed is {dr}, list is {lis}")
 	Dr = f"{dr}/{lis[counter]}"
 	print(dr)
 	blur = tk.Button(R, text= "want to see all thumbnails bflurred?", command= lambda fold =dr, o_fold=f"{dr}: averaged": average_img(fold, o_fold) )
@@ -118,8 +159,8 @@ def image_viewer(lis= [], dr = ""):
 	saved_to = tk.Label(R, text=f"all images saved to {dr}")
 	go_back.pack(anchor="ne")
 	image.pack()
-	up_b = tk.Button(R, text= "next image>", command=lambda l=lis, d=dr: up(l, d))
-	down_b = tk.Button(R, text= "<go back", command=lambda l=lis, d=dr: down(l, d))
+	up_b = tk.Button(R, text= "next image -->", command=lambda l=lis, d=dr: up(l, d))
+	down_b = tk.Button(R, text= "<-- go back", command=lambda l=lis, d=dr: down(l, d))
 	down_b.pack()
 	up_b.pack()
 	saved_to.pack()
@@ -128,8 +169,13 @@ def screenshot_grabber(channel_url):
     clear()
     with yt_dlp.YoutubeDL(yt_dlp_p) as ydl:
         info = ydl.extract_info(channel_url, download= False)
+        ls = os.listdir(info.get('uploader'))
+        dr = os.path.dirname(os.path.abspath(__file__))
+        for i in ls:
+            deldir = f"{dr}/{info.get('uploader')}/{i}"
+            print(f"removing {deldir}")
+            os.remove(deldir)
 
-        
         if info.get('_type') == "playlist":
             entries = []
             for e in info.get('entries'):
@@ -158,9 +204,8 @@ entry.insert(0, "youtube.com/@")
 entry.pack()
 
 start = tk.Button(R, text="confirm_channel", command = start_event)
-
-    
 start.pack()
 
 if __name__ == "__main__":
     R.mainloop()
+
