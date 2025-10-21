@@ -65,12 +65,14 @@ def average_img(folder, out_folder):
         
          
         if first:
+            labe = tk.Label(R, text = f"work starting")
+            labe.pack()
             for i in range(len(average_func_array)):
                 stop_event.clear()
                 threading.Thread(target=working, args=(stop_event,)).start()
                 avg_img, current_method =  average_func_array[i](images, img_size)
                 stop_event.set()
-                labe = tk.Label(R, text = f"saving {current_method} img")
+                labe.Text = f"saving {current_method} img"
                 labe.pack()
                 R.update_idletasks()
                 avg_img.save(f"{out_folder}/image {current_method}.png")
@@ -113,16 +115,19 @@ def average_img(folder, out_folder):
         saved_to.pack()
 
 def image_viewer(lis= [], dr = ""):
-    clear()
     global R
     global down_b
     global up_b
     global blur
     global image
     global counter
+    clear()
+    working = tk.Label(R, text="currently working")
+    working.pack()
+    R.update_idletasks()
     def back_to_dir_entering():
         global R
-        
+        global entry
         clear()
         entry = tk.Entry(R, width = 30)
         activate = tk.Button(R, text="average this directory?", command = start)
@@ -132,6 +137,7 @@ def image_viewer(lis= [], dr = ""):
     print(f"directory passed is {dr}, list is {lis}")
     Dr = f"{dr}/{lis[counter]}"
     print(dr)
+    working.destroy()
     dir_enter = tk.Button(R, text = "go back to directory entering?", command = back_to_dir_entering)
     blur = tk.Button(R, text= "want to see all thumbnails bflurred?", command= lambda fold =dr, o_fold=f"{dr}: averaged": average_img(fold, o_fold) )
     blur.pack(anchor="nw")
