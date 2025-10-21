@@ -16,6 +16,49 @@ for name, member in vars(img_averager).items():
     if isinstance(member, staticmethod):
         func = member.__func__
         average_func_array.append(func)
+def back_to_dir_entering(error=False, dr=""):
+        global R
+        global entry
+        clear()
+        t = ""
+        if error:
+            name, error = did_you_mean(dr)
+            if error < 3:
+                labe = tk.Label(R, text=f"that folder does not exist... did you mean {name}")
+                t = name
+                labe.pack()
+            else:
+                labe = tk.Label(R, text="that folder did not exist... please reenter")
+                labe.pack()
+        entry = tk.Entry(R, width = 30)
+        entry.insert( 0, t)
+        activate = tk.Button(R, text="average this dir?", command = start)
+        entry.pack()
+        activate.pack()
+def did_you_mean(rectory="", located_in="."):
+    directory = os.listdir(located_in)
+    errors = {}
+    def get_safe(s, i):
+        if i < len(s):
+            return s[i]
+        return None
+    length_storer = 0
+    longest_name = ""
+    for i in directory:
+        if len(i) > length_storer:
+            length_storer= len(i)
+            longest_name= i
+    for i in range(len(longest_name)):
+        for j in directory:
+            if j in errors:
+                errors[j] += int(get_safe(j, i) != get_safe(rectory, i))
+            elif j not in errors:
+                errors[j] = int(get_safe(j, i) != get_safe(rectory, i))
+    least = min(errors.values())
+    lowest = min(errors, key=errors.get)
+    
+            
+    return lowest, least
 def working(Event):
     count = 4
     while not Event.is_set():
@@ -29,8 +72,13 @@ def working(Event):
 def start():
     global average_folder
     average_folder = entry.get()
-    ls = os.listdir(f"{located_in}/{average_folder}")
-    image_viewer(ls, f"{located_in}/{average_folder}")
+    print(average_folder)
+    if os.path.isdir(average_folder):
+        ls = os.listdir(f"{located_in}/{average_folder}")
+    
+        image_viewer(ls, f"{located_in}/{average_folder}")
+    else:
+        back_to_dir_entering(True, average_folder)
 def clear():
     global R
     for i in R.winfo_children():
@@ -67,12 +115,13 @@ def average_img(folder, out_folder):
         if first:
             labe = tk.Label(R, text = f"work starting")
             labe.pack()
+            R.update_idletasks()
             for i in range(len(average_func_array)):
                 stop_event.clear()
                 threading.Thread(target=working, args=(stop_event,)).start()
                 avg_img, current_method =  average_func_array[i](images, img_size)
                 stop_event.set()
-                labe.Text = f"saving {current_method} img"
+                labe.config(text = f"saving {current_method} img")
                 labe.pack()
                 R.update_idletasks()
                 avg_img.save(f"{out_folder}/image {current_method}.png")
@@ -122,17 +171,15 @@ def image_viewer(lis= [], dr = ""):
     global image
     global counter
     clear()
+    
     working = tk.Label(R, text="currently working")
     working.pack()
+    print(dr)
     R.update_idletasks()
-    def back_to_dir_entering():
-        global R
-        global entry
-        clear()
-        entry = tk.Entry(R, width = 30)
-        activate = tk.Button(R, text="average this directory?", command = start)
-        entry.pack()
-        activate.pack()
+    
+    if not os.path.isdir(dr):
+        back_to_dir_entering(error= True)
+        
     R.title("image viewin time")
     print(f"directory passed is {dr}, list is {lis}")
     Dr = f"{dr}/{lis[counter]}"
